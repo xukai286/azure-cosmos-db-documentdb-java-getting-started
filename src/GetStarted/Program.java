@@ -42,8 +42,8 @@ public class Program {
     }
 
     private void getStartedDemo() throws DocumentClientException, IOException {
-        this.client = new DocumentClient("https://FILLME.documents.azure.com",
-                "FILLME", 
+        this.client = new DocumentClient("https://kaix-sql.documents.azure.com:443/",
+                "mI7GQzpfrkZIC4Wy8BdBmSktYhJCC9n5HWMW0cHKRlpjDj1zaXixuIKqfkYpJXkUi4rCkQhVifYRAkj1pjIjcQ==",
                 new ConnectionPolicy(),
                 ConsistencyLevel.Session);
 
@@ -231,6 +231,7 @@ public class Program {
                 "SELECT * FROM Family WHERE Family.lastName = 'Andersen'", queryOptions);
 
         System.out.println("Running SQL query...");
+        System.out.println("The Request charge （RU）for this request is "+queryResults.getRequestCharge()+"RU");
         for (Document family : queryResults.getQueryIterable()) {
             System.out.println(String.format("\tRead %s", family));
         }
