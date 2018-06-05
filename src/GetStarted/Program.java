@@ -232,6 +232,7 @@ public class Program {
 
         System.out.println("Running SQL query...");
         System.out.println("The Request charge （RU）for this request is "+queryResults.getRequestCharge()+"RU");
+
         for (Document family : queryResults.getQueryIterable()) {
             System.out.println(String.format("\tRead %s", family));
         }
@@ -257,6 +258,7 @@ public class Program {
             this.client.deleteDocument(String.format("/dbs/%s/colls/%s/docs/%s", databaseName, collectionName, documentName), null);
             writeToConsoleAndPromptToContinue(String.format("Deleted Family %s", documentName));
         } catch (DocumentClientException de) {
+            long time = Long.parseLong( de.getResponseHeaders().get("x-ms-retry-after-ms"));
             throw de;
         }
     }
