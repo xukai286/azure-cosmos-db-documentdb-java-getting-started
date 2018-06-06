@@ -1,21 +1,11 @@
 package GetStarted;
 
-import java.io.IOException;
+import static  java.lang.System.*;
 
-import com.microsoft.azure.documentdb.ConnectionPolicy;
-import com.microsoft.azure.documentdb.ConsistencyLevel;
-import com.microsoft.azure.documentdb.DataType;
-import com.microsoft.azure.documentdb.Database;
-import com.microsoft.azure.documentdb.Document;
-import com.microsoft.azure.documentdb.DocumentClient;
-import com.microsoft.azure.documentdb.DocumentClientException;
-import com.microsoft.azure.documentdb.DocumentCollection;
-import com.microsoft.azure.documentdb.FeedOptions;
-import com.microsoft.azure.documentdb.FeedResponse;
-import com.microsoft.azure.documentdb.Index;
-import com.microsoft.azure.documentdb.IndexingPolicy;
-import com.microsoft.azure.documentdb.RangeIndex;
-import com.microsoft.azure.documentdb.RequestOptions;
+import java.io.IOException;
+import java.util.Iterator;
+
+import com.microsoft.azure.documentdb.*;
 
 public class Program {
 
@@ -226,7 +216,39 @@ public class Program {
         queryOptions.setPageSize(-1);
         queryOptions.setEnableCrossPartitionQuery(true);
 
+        RequestOptions requestOptions = new RequestOptions();
+
         String collectionLink = String.format("/dbs/%s/colls/%s", databaseName, collectionName);
+        String collectionResourceId = null;
+        int newThroughput = 600;
+        try {
+            collectionResourceId = client.readCollection(collectionLink, requestOptions).getResource().getResourceId();
+
+
+        Iterator<Offer> it = client.queryOffers(
+                String.format("SELECT * FROM r where r.offerResourceId = '%s'", collectionResourceId), null).getQueryIterator();
+//        assertThat(it.hasNext(), equalTo(true));
+
+        Offer offer = it.next();
+//        assertThat(offer.getString("offerResourceId"), equalTo(collectionResourceId));
+//        assertThat(offer.getContent().getInt("offerThroughput"), equalTo(throughput));
+        out.println("The offer now is "+offer.getContent().getInt("offerThroughput")+". update it to "+newThroughput);
+
+        // update the offer
+
+        offer.getContent().put("offerThroughput", newThroughput);
+        client.replaceOffer(offer);
+
+        int theneww = client.queryOffers(String.format("SELECT * FROM r where r.offerResourceId = '%s'",
+                collectionResourceId), null).getQueryIterator().next().getContent().getInt("offerThroughput");
+
+        out.println("The new throughput is "+theneww);
+
+        } catch (DocumentClientException e) {
+            e.printStackTrace();
+        }
+
+
         FeedResponse<Document> queryResults = this.client.queryDocuments(collectionLink,
                 "SELECT * FROM Family WHERE Family.lastName = 'Andersen'", queryOptions);
 
@@ -268,5 +290,66 @@ public class Program {
         System.out.println("Press any key to continue ...");
         System.in.read();
     }
+
+
+/*    public void updateOffer() throws DocumentClientException {
+
+        ////////////////////////////////////////////////////////////////////////////
+        // create a collection
+        ////////////////////////////////////////////////////////////////////////////
+
+        String databaseLink = String.format("/dbs/%s", databaseId);
+
+        DocumentCollection collectionDefinition = new DocumentCollection();
+        collectionDefinition.setId(collectionId);
+
+        // set /city as the partition key path
+        PartitionKeyDefinition partitionKeyDefinition = new PartitionKeyDefinition();
+        Collection<String> paths = new ArrayList<String>();
+        paths.add(partitionKeyPath);
+        partitionKeyDefinition.setPaths(paths);
+        collectionDefinition.setPartitionKey(partitionKeyDefinition);
+
+        int throughput = 10200;
+        // set the throughput to be 10,200
+        RequestOptions options = new RequestOptions();
+        options.setOfferThroughput(throughput);
+
+        // create a collection
+        client.createCollection(databaseLink, collectionDefinition, options);
+
+        String collectionLink = String.format("/dbs/%s/colls/%s", databaseId, collectionId);
+
+        ////////////////////////////////////////////////////////////////////////////
+        // find the offer associated with the created collection
+        ////////////////////////////////////////////////////////////////////////////
+
+        // read the collection
+        String collectionResourceId = client.readCollection(collectionLink, options).getResource().getResourceId();
+
+        // find offer associated with this collection
+        Iterator<Offer> it = client.queryOffers(
+                String.format("SELECT * FROM r where r.offerResourceId = '%s'", collectionResourceId), null).getQueryIterator();
+        assertThat(it.hasNext(), equalTo(true));
+
+        Offer offer = it.next();
+        assertThat(offer.getString("offerResourceId"), equalTo(collectionResourceId));
+        assertThat(offer.getContent().getInt("offerThroughput"), equalTo(throughput));
+
+        // update the offer
+        int newThroughput = 10300;
+        offer.getContent().put("offerThroughput", newThroughput);
+        client.replaceOffer(offer);
+
+        // validate the updated offer
+        it = client.queryOffers(String.format("SELECT * FROM r where r.offerResourceId = '%s'", collectionResourceId), null).getQueryIterator();
+        assertThat(it.hasNext(), equalTo(true));
+
+        offer = it.next();
+        assertThat(offer.getString("offerResourceId"), equalTo(collectionResourceId));
+        assertThat(offer.getContent().getInt("offerThroughput"), equalTo(newThroughput));
+    }*/
+
+
 }
 
