@@ -227,11 +227,9 @@ public class Program {
 
         Iterator<Offer> it = client.queryOffers(
                 String.format("SELECT * FROM r where r.offerResourceId = '%s'", collectionResourceId), null).getQueryIterator();
-//        assertThat(it.hasNext(), equalTo(true));
+
 
         Offer offer = it.next();
-//        assertThat(offer.getString("offerResourceId"), equalTo(collectionResourceId));
-//        assertThat(offer.getContent().getInt("offerThroughput"), equalTo(throughput));
         out.println("The offer now is "+offer.getContent().getInt("offerThroughput")+". update it to "+newThroughput);
 
         // update the offer
